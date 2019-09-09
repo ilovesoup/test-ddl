@@ -265,7 +265,7 @@ public class Table {
         Statement stmt = conn.createStatement();
         ResultSet rs = stmt.executeQuery(String.format("select count(*) from %s where %s is null", tableName, name));
         rs.next();
-        if (0 != rs.getLong(0)) {
+        if (0 != rs.getLong(1)) {
             return false;
         }
         return true;
