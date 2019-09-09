@@ -2,12 +2,19 @@ package com.pingcap.spark;
 
 public abstract class Type {
     protected boolean isNotNull;
+    String defaultValue;
+    void setNotNull(boolean isNotNull) {
+        this.isNotNull = isNotNull;
+    }
     abstract Type enlarge();
     abstract String ddlString();
     abstract String getMin();
     abstract String getMax();
     String getNull() { return "NULL"; }
     boolean isNotNull() { return isNotNull; }
+    String getDefaultValue() {
+        return defaultValue;
+    }
 }
 
 class IntegralType extends Type {
@@ -33,9 +40,14 @@ class IntegralType extends Type {
     };
 
     public IntegralType(IntType detailType, boolean unsigned, boolean notNull) {
+        this(detailType, unsigned, notNull, null);
+    }
+
+    public IntegralType(IntType detailType, boolean unsigned, boolean notNull, String def) {
         this.detailType = detailType;
         this.isUnsigned = unsigned;
         this.isNotNull = notNull;
+        this.defaultValue = def;
     }
 
     @Override
@@ -46,10 +58,11 @@ class IntegralType extends Type {
 
     @Override
     String ddlString() {
-        return String.format("%s %s %s",
+        return String.format("%s %s %s %s",
                 detailType.name(),
                 isUnsigned() ? "UNSIGNED" : "",
-                isNotNull() ? "NOT NULL" : "");
+                isNotNull() ? "NOT NULL" : "",
+                defaultValue == null ? "" : String.format("DEFAULT %s", defaultValue));
     }
 
     @Override
@@ -61,13 +74,23 @@ class IntegralType extends Type {
     String getMax() {
         return maxVal[isUnsigned() ? 1 : 0][detailType.ordinal()];
     }
+
+    @Override
+    String getDefaultValue() {
+        return null;
+    }
 }
 
 class Varchar extends Type {
     private int length;
     public Varchar(int length, boolean notNull) {
+        this(length, notNull, null);
+    }
+
+    public Varchar(int length, boolean notNull, String def) {
         this.isNotNull = notNull;
         this.length = length;
+        this.defaultValue = def;
     }
 
     @Override
